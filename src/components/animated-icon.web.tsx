@@ -1,108 +1,156 @@
-import { Image } from 'expo-image';
-import { StyleSheet, View } from 'react-native';
-import Animated, { Keyframe, Easing } from 'react-native-reanimated';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Image } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+  runOnJS,
+  Easing,
+  withRepeat,
+  withSequence,
+} from 'react-native-reanimated';
 
-import classes from './animated-icon.module.css';
-const DURATION = 300;
+import { useTheme } from '@/hooks/use-theme';
+
+const LOGO_SIZE = 120;
+const HOME_LOGO_SIZE = 32;
+const ANIMATION_DURATION = 1800; // 1.8 seconds for liquid fill
 
 export function AnimatedSplashOverlay() {
-  return null;
+  const theme = useTheme();
+  const [visible, setVisible] = useState(true);
+
+  // Animation values
+  const fillHeight = useSharedValue(0); // 0 to LOGO_SIZE
+  const opacity = useSharedValue(1);    // Screen opacity
+
+  useEffect(() => {
+    // Start liquid fill animation
+    fillHeight.value = withTiming(LOGO_SIZE, {
+      duration: ANIMATION_DURATION,
+      easing: Easing.bezier(0.4, 0, 0.2, 1),
+    }, (finished) => {
+      if (finished) {
+        // Fade out screen after fill completes
+        opacity.value = withDelay(
+          200,
+          withTiming(0, { duration: 400 }, (fadeOutFinished) => {
+            if (fadeOutFinished) {
+              runOnJS(setVisible)(false);
+            }
+          })
+        );
+      }
+    });
+  }, []);
+
+  // Animated styles
+  const liquidStyle = useAnimatedStyle(() => {
+    return {
+      height: fillHeight.value,
+    };
+  });
+
+  const screenStyle = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
+    };
+  });
+
+  if (!visible) return null;
+
+  return (
+    <Animated.View style={[styles.overlayContainer, { backgroundColor: theme.background }, screenStyle]}>
+      <View style={styles.logoWrapper}>
+        {/* Background "Empty" Logo */}
+        <Image
+          source={require('@/assets/images/coal.png')}
+          style={[styles.logoImage, { tintColor: theme.textSecondary, opacity: 0.15 }]}
+          resizeMode="contain"
+        />
+
+        {/* Foreground "Filled" Logo revealed by height */}
+        <Animated.View style={[styles.liquidContainer, liquidStyle]}>
+          <Image
+            source={require('@/assets/images/coal.png')}
+            style={[styles.logoImage, { tintColor: theme.text, height: LOGO_SIZE }]}
+            resizeMode="contain"
+          />
+        </Animated.View>
+      </View>
+    </Animated.View>
+  );
 }
 
-const keyframe = new Keyframe({
-  0: {
-    transform: [{ scale: 0 }],
-  },
-  60: {
-    transform: [{ scale: 1.2 }],
-    easing: Easing.elastic(1.2),
-  },
-  100: {
-    transform: [{ scale: 1 }],
-    easing: Easing.elastic(1.2),
-  },
-});
-
-const logoKeyframe = new Keyframe({
-  0: {
-    opacity: 0,
-  },
-  60: {
-    transform: [{ scale: 1.2 }],
-    opacity: 0,
-    easing: Easing.elastic(1.2),
-  },
-  100: {
-    transform: [{ scale: 1 }],
-    opacity: 1,
-    easing: Easing.elastic(1.2),
-  },
-});
-
-const glowKeyframe = new Keyframe({
-  0: {
-    transform: [{ rotateZ: '-180deg' }, { scale: 0.8 }],
-    opacity: 0,
-  },
-  [DURATION / 1000]: {
-    transform: [{ rotateZ: '0deg' }, { scale: 1 }],
-    opacity: 1,
-    easing: Easing.elastic(0.7),
-  },
-  100: {
-    transform: [{ rotateZ: '7200deg' }],
-  },
-});
-
 export function AnimatedIcon() {
+  const theme = useTheme();
+  const pulse = useSharedValue(1);
+
+  useEffect(() => {
+    pulse.value = withRepeat(
+      withSequence(
+        withTiming(1.08, { duration: 1000, easing: Easing.ease }),
+        withTiming(1, { duration: 1000, easing: Easing.ease })
+      ),
+      -1, // Infinite repeat
+      true
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: pulse.value }],
+    };
+  });
+
   return (
-    <View style={styles.iconContainer}>
-      <Animated.View entering={glowKeyframe.duration(60 * 1000 * 4)} style={styles.glow}>
-        <Image style={styles.glow} source={require('@/assets/images/logo-glow.png')} />
-      </Animated.View>
-
-      <Animated.View style={styles.background} entering={keyframe.duration(DURATION)}>
-        <div className={classes.expoLogoBackground} />
-      </Animated.View>
-
-      <Animated.View style={styles.imageContainer} entering={logoKeyframe.duration(DURATION)}>
-        <Image style={styles.image} source={require('@/assets/images/expo-logo.png')} />
-      </Animated.View>
-    </View>
+    <Animated.View style={[styles.homeLogoWrapper, animatedStyle]}>
+      <Image
+        source={require('@/assets/images/coal.png')}
+        style={[styles.homeLogoImage, { tintColor: theme.text }]}
+        resizeMode="contain"
+      />
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    width: '100%',
-    zIndex: 1000,
+  overlayContainer: {
     position: 'absolute',
-    top: 128 / 2 + 138,
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
   },
-  imageContainer: {
+  logoWrapper: {
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
+    position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  glow: {
-    width: 201,
-    height: 201,
-    position: 'absolute',
+  logoImage: {
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
   },
-  iconContainer: {
+  liquidContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    width: LOGO_SIZE,
+    overflow: 'hidden',
+  },
+  homeLogoWrapper: {
     justifyContent: 'center',
     alignItems: 'center',
-    width: 128,
-    height: 128,
   },
-  image: {
-    position: 'absolute',
-    width: 76,
-    height: 71,
-  },
-  background: {
-    width: 128,
-    height: 128,
-    position: 'absolute',
+  homeLogoImage: {
+    width: HOME_LOGO_SIZE,
+    height: HOME_LOGO_SIZE,
   },
 });

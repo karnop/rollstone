@@ -1,0 +1,24 @@
+'Log files:
+/Users/soniaarora/code/rollstone/.npm-cache/_logs/2026-06-20T07_09_52_672Z-debug-0.log
+
+# npm resolution error report
+
+While resolving: rollstone@1.0.0
+Found: expo-router@56.2.11
+node_modules/expo-router
+  expo-router@"~6.0.24" from the root project
+
+Could not resolve dependency:
+expo-router@"~6.0.24" from the root project
+
+Conflicting peer dependency: react@19.1.0
+node_modules/react
+  peer react@"^19.2.7" from react-server-dom-webpack@19.2.7
+  node_modules/react-server-dom-webpack
+    peerOptional react-server-dom-webpack@"~19.0.4 || ~19.1.5 || ~19.2.4" from expo-router@6.0.24
+    node_modules/expo-router
+      expo-router@"~6.0.24" from the root project
+
+Fix the upstream dependency conflict, or retry
+this command with --force or --legacy-peer-deps
+to accept an incorrect (and potentially broken) dependency resolution.

@@ -1,8 +1,9 @@
 import { Image } from 'expo-image';
-import { SymbolView } from 'expo-symbols';
-import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Platform, Pressable, ScrollView, StyleSheet, View, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AnimatedIcon } from '@/components/animated-icon';
 import { ExternalLink } from '@/components/external-link';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -13,45 +14,40 @@ import { useTheme } from '@/hooks/use-theme';
 
 export default function TabTwoScreen() {
   const safeAreaInsets = useSafeAreaInsets();
-  const insets = {
-    ...safeAreaInsets,
-    bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
-  };
   const theme = useTheme();
 
-  const contentPlatformStyle = Platform.select({
-    android: {
-      paddingTop: insets.top,
-      paddingLeft: insets.left,
-      paddingRight: insets.right,
-      paddingBottom: insets.bottom,
-    },
-    web: {
-      paddingTop: Spacing.six,
-      paddingBottom: Spacing.four,
-    },
-  });
-
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentInset={insets}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Explore</ThemedText>
-          <ThemedText style={styles.centerText} themeColor="textSecondary">
-            This starter app includes example{'\n'}code to help you get started.
-          </ThemedText>
+    <ThemedView style={styles.container}>
+      <View style={{ height: safeAreaInsets.top, backgroundColor: theme.background }} />
+
+      {/* Uniform Header Row */}
+      <View style={styles.header}>
+        <View style={styles.logoContainer}>
+          <AnimatedIcon />
+        </View>
+        <Text style={{ fontFamily: 'Pliant-Bold', fontSize: 18, color: theme.text }}>Explore</Text>
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: safeAreaInsets.bottom + BottomTabInset + Spacing.four }
+        ]}>
+        <ThemedView style={styles.innerContainer}>
+          <ThemedView style={styles.titleContainer}>
+            <ThemedText style={styles.centerText} themeColor="textSecondary">
+              This starter app includes example{'\n'}code to help you get started.
+            </ThemedText>
 
           <ExternalLink href="https://docs.expo.dev" asChild>
             <Pressable style={({ pressed }) => pressed && styles.pressed}>
               <ThemedView type="backgroundElement" style={styles.linkButton}>
                 <ThemedText type="link">Expo documentation</ThemedText>
-                <SymbolView
-                  tintColor={theme.text}
-                  name={{ ios: 'arrow.up.right.square', android: 'link', web: 'link' }}
+                <Ionicons
+                  name="open-outline"
                   size={12}
+                  color={theme.text}
                 />
               </ThemedView>
             </Pressable>
@@ -120,20 +116,32 @@ export default function TabTwoScreen() {
           </Collapsible>
         </ThemedView>
         {Platform.OS === 'web' && <WebBadge />}
-      </ThemedView>
-    </ScrollView>
+        </ThemedView>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
+  container: {
     flex: 1,
   },
-  contentContainer: {
+  header: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
   },
-  container: {
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  scrollContent: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.two,
+  },
+  innerContainer: {
     maxWidth: MaxContentWidth,
     flexGrow: 1,
   },
@@ -141,7 +149,7 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     alignItems: 'center',
     paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.six,
+    paddingVertical: Spacing.four,
   },
   centerText: {
     textAlign: 'center',

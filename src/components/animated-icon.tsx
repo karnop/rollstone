@@ -1,132 +1,156 @@
-import { Image } from 'expo-image';
-import { useState } from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
-import Animated, { Easing, Keyframe } from 'react-native-reanimated';
-import { scheduleOnRN } from 'react-native-worklets';
+import React, { useState, useEffect } from 'react';
+import { Dimensions, StyleSheet, View, Image } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+  runOnJS,
+  Easing,
+  withRepeat,
+  withSequence,
+} from 'react-native-reanimated';
 
-const INITIAL_SCALE_FACTOR = Dimensions.get('screen').height / 90;
-const DURATION = 600;
+import { useTheme } from '@/hooks/use-theme';
+
+const LOGO_SIZE = 120;
+const HOME_LOGO_SIZE = 32;
+const ANIMATION_DURATION = 1800; // 1.8 seconds for liquid fill
 
 export function AnimatedSplashOverlay() {
+  const theme = useTheme();
   const [visible, setVisible] = useState(true);
+
+  // Animation values
+  const fillHeight = useSharedValue(0); // 0 to LOGO_SIZE
+  const opacity = useSharedValue(1);    // Screen opacity
+
+  useEffect(() => {
+    // Start liquid fill animation
+    fillHeight.value = withTiming(LOGO_SIZE, {
+      duration: ANIMATION_DURATION,
+      easing: Easing.bezier(0.4, 0, 0.2, 1),
+    }, (finished) => {
+      if (finished) {
+        // Fade out screen after fill completes
+        opacity.value = withDelay(
+          200,
+          withTiming(0, { duration: 400 }, (fadeOutFinished) => {
+            if (fadeOutFinished) {
+              runOnJS(setVisible)(false);
+            }
+          })
+        );
+      }
+    });
+  }, []);
+
+  // Animated styles
+  const liquidStyle = useAnimatedStyle(() => {
+    return {
+      height: fillHeight.value,
+    };
+  });
+
+  const screenStyle = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
+    };
+  });
 
   if (!visible) return null;
 
-  const splashKeyframe = new Keyframe({
-    0: {
-      transform: [{ scale: INITIAL_SCALE_FACTOR }],
-      opacity: 1,
-    },
-    20: {
-      opacity: 1,
-    },
-    70: {
-      opacity: 0,
-      easing: Easing.elastic(0.7),
-    },
-    100: {
-      opacity: 0,
-      transform: [{ scale: 1 }],
-      easing: Easing.elastic(0.7),
-    },
-  });
-
   return (
-    <Animated.View
-      entering={splashKeyframe.duration(DURATION).withCallback((finished) => {
-        'worklet';
-        if (finished) {
-          scheduleOnRN(setVisible, false);
-        }
-      })}
-      style={styles.backgroundSolidColor}
-    />
+    <Animated.View style={[styles.overlayContainer, { backgroundColor: theme.background }, screenStyle]}>
+      <View style={styles.logoWrapper}>
+        {/* Background "Empty" Logo */}
+        <Image
+          source={require('@/assets/images/coal.png')}
+          style={[styles.logoImage, { tintColor: theme.textSecondary, opacity: 0.15 }]}
+          resizeMode="contain"
+        />
+
+        {/* Foreground "Filled" Logo revealed by height */}
+        <Animated.View style={[styles.liquidContainer, liquidStyle]}>
+          <Image
+            source={require('@/assets/images/coal.png')}
+            style={[styles.logoImage, { tintColor: theme.text, height: LOGO_SIZE }]}
+            resizeMode="contain"
+          />
+        </Animated.View>
+      </View>
+    </Animated.View>
   );
 }
 
-const keyframe = new Keyframe({
-  0: {
-    transform: [{ scale: INITIAL_SCALE_FACTOR }],
-  },
-  100: {
-    transform: [{ scale: 1 }],
-    easing: Easing.elastic(0.7),
-  },
-});
-
-const logoKeyframe = new Keyframe({
-  0: {
-    transform: [{ scale: 1.3 }],
-    opacity: 0,
-  },
-  40: {
-    transform: [{ scale: 1.3 }],
-    opacity: 0,
-    easing: Easing.elastic(0.7),
-  },
-  100: {
-    opacity: 1,
-    transform: [{ scale: 1 }],
-    easing: Easing.elastic(0.7),
-  },
-});
-
-const glowKeyframe = new Keyframe({
-  0: {
-    transform: [{ rotateZ: '0deg' }],
-  },
-  100: {
-    transform: [{ rotateZ: '7200deg' }],
-  },
-});
-
 export function AnimatedIcon() {
-  return (
-    <View style={styles.iconContainer}>
-      <Animated.View entering={glowKeyframe.duration(60 * 1000 * 4)} style={styles.glow}>
-        <Image style={styles.glow} source={require('@/assets/images/logo-glow.png')} />
-      </Animated.View>
+  const theme = useTheme();
+  const pulse = useSharedValue(1);
 
-      <Animated.View entering={keyframe.duration(DURATION)} style={styles.background} />
-      <Animated.View style={styles.imageContainer} entering={logoKeyframe.duration(DURATION)}>
-        <Image style={styles.image} source={require('@/assets/images/expo-logo.png')} />
-      </Animated.View>
-    </View>
+  useEffect(() => {
+    pulse.value = withRepeat(
+      withSequence(
+        withTiming(1.08, { duration: 1000, easing: Easing.ease }),
+        withTiming(1, { duration: 1000, easing: Easing.ease })
+      ),
+      -1, // Infinite repeat
+      true
+    );
+  }, []);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: pulse.value }],
+    };
+  });
+
+  return (
+    <Animated.View style={[styles.homeLogoWrapper, animatedStyle]}>
+      <Image
+        source={require('@/assets/images/coal.png')}
+        style={[styles.homeLogoImage, { tintColor: theme.text }]}
+        resizeMode="contain"
+      />
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  imageContainer: {
+  overlayContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 9999,
+  },
+  logoWrapper: {
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
+    position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  glow: {
-    width: 201,
-    height: 201,
-    position: 'absolute',
+  logoImage: {
+    width: LOGO_SIZE,
+    height: LOGO_SIZE,
   },
-  iconContainer: {
+  liquidContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    width: LOGO_SIZE,
+    overflow: 'hidden',
+  },
+  homeLogoWrapper: {
     justifyContent: 'center',
     alignItems: 'center',
-    width: 128,
-    height: 128,
-    zIndex: 100,
   },
-  image: {
-    position: 'absolute',
-    width: 76,
-    height: 71,
-  },
-  background: {
-    borderRadius: 40,
-    experimental_backgroundImage: `linear-gradient(180deg, #3C9FFE, #0274DF)`,
-    width: 128,
-    height: 128,
-    position: 'absolute',
-  },
-  backgroundSolidColor: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: '#208AEF',
-    zIndex: 1000,
+  homeLogoImage: {
+    width: HOME_LOGO_SIZE,
+    height: HOME_LOGO_SIZE,
   },
 });
