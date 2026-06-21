@@ -1,15 +1,21 @@
-import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
-import { Spacing } from '@/constants/theme';
-import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/auth-context';
 import { useThemeContext } from '@/context/theme-context';
+import { Ionicons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const ACCENT_COLOR = '#E63462';
 
 export default function AppTabs() {
   const { theme } = useThemeContext();
   const { isAdmin } = useAuth();
+  const insets = useSafeAreaInsets();
+
+  const bottomInset = insets.bottom;
+  const tabHeight = Platform.OS === 'ios'
+    ? (bottomInset > 0 ? 50 + bottomInset : 64)
+    : (bottomInset > 0 ? 56 + bottomInset : 56);
 
   return (
     <Tabs
@@ -18,15 +24,15 @@ export default function AppTabs() {
         tabBarActiveTintColor: ACCENT_COLOR,
         tabBarInactiveTintColor: theme.textSecondary,
         tabBarIconStyle: {
-          marginTop: 6,
-          marginBottom: 6,
+          justifyContent: 'center',
+          alignItems: 'center',
         },
         tabBarStyle: {
           backgroundColor: theme.background,
           borderTopColor: theme.backgroundElement,
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 84 : 80,
-          paddingBottom: Platform.OS === 'ios' ? 24 : 16,
+          height: tabHeight,
+          paddingBottom: bottomInset,
         },
         headerShown: false,
       }}>
