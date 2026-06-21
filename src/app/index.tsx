@@ -26,6 +26,7 @@ import {
 import { styles } from './index.styles';
 import { RoundDetailModal } from '@/components/round-detail-modal';
 import { LogSessionModal } from '@/components/log-session-modal';
+import { SwipeWrapper } from '@/components/swipe-wrapper';
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -222,7 +223,8 @@ export default function HomeScreen() {
   ];
 
   return (
-    <ThemedView style={styles.container}>
+    <SwipeWrapper disableRight={true}>
+      <ThemedView style={styles.container}>
       <View style={{ height: safeAreaInsets.top, backgroundColor: theme.background }} />
 
       {/* Header Row */}
@@ -274,7 +276,7 @@ export default function HomeScreen() {
       <ScrollView 
         ref={mainScrollViewRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: safeAreaInsets.bottom + BottomTabInset + Spacing.six }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: safeAreaInsets.bottom + Spacing.six }]}
         keyboardShouldPersistTaps="handled">
         
         {/* Heatmap Section */}
@@ -498,6 +500,7 @@ export default function HomeScreen() {
         onClose={() => setSelectedRoundDetail(null)}
         onEdit={startEditRound}
       />
-    </ThemedView>
+      </ThemedView>
+    </SwipeWrapper>
   );
 }

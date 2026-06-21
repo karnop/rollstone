@@ -10,6 +10,7 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing, BottomTabInset } from '@/constants/theme';
 import { useThemeContext, ThemeMode } from '@/context/theme-context';
 import { useAuth } from '@/context/auth-context';
+import { SwipeWrapper } from '@/components/swipe-wrapper';
 
 const ACCENT_COLOR = '#E63462';
 
@@ -161,7 +162,8 @@ export default function SettingsScreen() {
   const beltStyle = getBeltStyle(profileBelt);
 
   return (
-    <ThemedView style={styles.container}>
+    <SwipeWrapper disableLeft={true}>
+      <ThemedView style={styles.container}>
       <View style={{ height: safeAreaInsets.top, backgroundColor: theme.background }} />
 
       {/* Uniform Header Row */}
@@ -169,14 +171,13 @@ export default function SettingsScreen() {
         <View style={styles.logoContainer}>
           <AnimatedIcon />
         </View>
-        <Text style={{ fontFamily: 'Pliant-Bold', fontSize: 18, color: theme.text }}>Settings</Text>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: safeAreaInsets.bottom + BottomTabInset + Spacing.four }
+          { paddingBottom: safeAreaInsets.bottom + Spacing.four }
         ]}>
 
         {/* 1. Profile Header */}
@@ -517,6 +518,7 @@ export default function SettingsScreen() {
         </View>
       </Modal>
     </ThemedView>
+    </SwipeWrapper>
   );
 }
 

@@ -17,7 +17,9 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing, BottomTabInset } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { useAuth } from '@/context/auth-context';
 import { supabase } from '@/lib/supabase';
+import { SwipeWrapper } from '@/components/swipe-wrapper';
 
 interface Position {
   id: string;
@@ -166,7 +168,8 @@ export default function AdminScreen() {
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <SwipeWrapper>
+      <ThemedView style={styles.container}>
       <View style={{ height: safeAreaInsets.top, backgroundColor: theme.background }} />
 
       {/* Uniform Header Row */}
@@ -181,7 +184,7 @@ export default function AdminScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: safeAreaInsets.bottom + BottomTabInset + Spacing.four }
+          { paddingBottom: safeAreaInsets.bottom + Spacing.four }
         ]}>
         
         {/* Descriptive Banner inside ScrollView */}
@@ -364,7 +367,8 @@ export default function AdminScreen() {
           </View>
         )}
       </ScrollView>
-    </ThemedView>
+      </ThemedView>
+    </SwipeWrapper>
   );
 }
 
